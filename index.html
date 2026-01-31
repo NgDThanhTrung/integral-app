@@ -3,73 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Học Tập Tích Phân 12 - Mô Phỏng 3D</title>
+    <title>MathPro 12 - Giải Tích Phân & 3D</title>
     
     <script src="https://unpkg.com/mathlive"></script>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
-        :root { --primary: #2563eb; --secondary: #10b981; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        
-        .container { background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h1 { color: #1e293b; text-align: center; margin-bottom: 30px; font-size: 1.8rem; }
-        
-        .input-group { margin-bottom: 25px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #475569; }
-        
-        math-field { border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; font-size: 1.6rem; width: 100%; outline: none; transition: 0.3s; }
-        math-field:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
 
-        .range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .range-inputs input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #cbd5e1 0%, #f8fafc 100%);
+            margin: 0;
+            padding: 40px 20px;
+            color: #1e293b;
+            min-height: 100vh;
+        }
 
-        button { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #1d4ed8; transform: translateY(-1px); }
-        button:active { transform: translateY(0); }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
 
-        .result-section { margin-top: 30px; display: none; border-top: 2px dashed #e2e8f0; padding-top: 20px; }
-        .res-box { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        .res-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; }
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { font-size: 2.4rem; color: var(--primary); margin: 0; font-weight: 800; letter-spacing: -1px; }
+        .header p { color: #64748b; margin-top: 10px; font-size: 1.1rem; }
 
-        #plot-3d { width: 100%; height: 500px; border-radius: 12px; overflow: hidden; }
-        .loading { display: none; text-align: center; color: var(--primary); font-weight: bold; margin: 10px 0; }
+        .input-section { background: #ffffff; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+
+        .quick-tags { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tag {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #475569;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .tag:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+
+        math-field {
+            width: 100%;
+            font-size: 1.8rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 25px;
+            background: white;
+        }
+        math-field:focus-within { border-color: var(--primary); outline: none; }
+
+        .range-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .input-field label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: #475569; }
+        .input-field input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+        .input-field input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        .btn-solve {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-solve:hover { background: #1d4ed8; shadow: 0 10px 15px -3px rgba(37,99,235,0.3); transform: translateY(-2px); }
+
+        #loading { display: none; text-align: center; margin: 25px 0; color: var(--primary); font-size: 1.1rem; }
+
+        .result-card { margin-top: 35px; display: none; animation: slideUp 0.6s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .res-item { background: #fff; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .res-label { font-size: 0.85rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 15px; font-weight: 700; }
+
+        #plot-3d { border-radius: 20px; overflow: hidden; margin-top: 25px; background: white; border: 1px solid #e2e8f0; min-height: 500px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Giải & Mô Phỏng Tích Phân 12</h1>
-
-    <div class="input-group">
-        <label>Nhập hàm số $f(x)$:</label>
-        <math-field id="formula">x^2</math-field>
+    <div class="header">
+        <h1><i class="fas fa-wave-square"></i> MathPro 12</h1>
+        <p>Giải tích phân & Mô phỏng 3D vật thể tròn xoay</p>
     </div>
 
-    <div class="range-inputs">
-        <div>
-            <label>Cận dưới (a):</label>
-            <input type="text" id="lower" placeholder="Ví dụ: 0">
+    <div class="input-section">
+        <div class="quick-tags">
+            <button class="tag" onclick="setMF('x^2')">x²</button>
+            <button class="tag" onclick="setMF('\\sin(x)')">sin(x)</button>
+            <button class="tag" onclick="setMF('e^x')">eˣ</button>
+            <button class="tag" onclick="setMF('\\ln(x)')">ln(x)</button>
+            <button class="tag" onclick="setMF('\\frac{1}{x}')">1/x</button>
         </div>
-        <div>
-            <label>Cận trên (b):</label>
-            <input type="text" id="upper" placeholder="Ví dụ: 2">
+
+        <math-field id="main-input">x^2</math-field>
+
+        <div class="range-grid">
+            <div class="input-field">
+                <label><i class="fas fa-arrow-down"></i> Cận dưới (a)</label>
+                <input type="text" id="a-val" placeholder="Ví dụ: 0">
+            </div>
+            <div class="input-field">
+                <label><i class="fas fa-arrow-up"></i> Cận trên (b)</label>
+                <input type="text" id="b-val" placeholder="Ví dụ: 2">
+            </div>
         </div>
+
+        <button class="btn-solve" onclick="calculate()">
+            <i class="fas fa-rocket"></i> GIẢI & DỰNG HÌNH 3D
+        </button>
     </div>
 
-    <button onclick="runApp()">GIẢI TOÁN & VẼ 3D</button>
-    <div id="loading" class="loading">Đang tính toán và dựng hình 3D...</div>
+    <div id="loading">
+        <i class="fas fa-spinner fa-spin"></i> Đang kết nối server và xử lý...
+    </div>
 
-    <div id="result-section" class="result-section">
-        <div class="res-box">
-            <div class="res-title">Kết quả tích phân:</div>
-            <div id="math-output" style="font-size: 1.3rem;"></div>
+    <div id="result-card" class="result-card">
+        <div class="res-item">
+            <div class="res-label">Kết quả toán học</div>
+            <div id="math-output" style="font-size: 1.6rem; overflow-x: auto;"></div>
         </div>
         
-        <div class="res-box" id="volume-box" style="display:none; border-left: 4px solid var(--secondary);">
-            <div class="res-title">Thể tích vật thể tròn xoay (Quanh Ox):</div>
-            <div id="volume-output" style="font-size: 1.3rem;"></div>
+        <div class="res-item" id="vol-container" style="display: none; border-left: 6px solid var(--secondary);">
+            <div class="res-label">Thể tích khối tròn xoay (Trục Ox)</div>
+            <div id="vol-output" style="font-size: 1.6rem; color: var(--secondary); font-weight: 600;"></div>
         </div>
 
         <div id="plot-3d"></div>
@@ -77,92 +166,84 @@
 </div>
 
 <script>
-    const API_BASE = "https://giai-tich-phan-12.onrender.com"; 
+    // Link Render chính xác của bạn
+    const API_URL = "https://giai-tich-phan-12.onrender.com"; 
 
-    async function runApp() {
-        const formula = document.getElementById('formula').getValue('ascii-math');
-        const a = document.getElementById('lower').value;
-        const b = document.getElementById('upper').value;
-        
+    function setMF(val) { document.getElementById('main-input').value = val; }
+
+    async function calculate() {
+        const formula = document.getElementById('main-input').getValue('ascii-math');
+        const a = document.getElementById('a-val').value;
+        const b = document.getElementById('b-val').value;
         const loading = document.getElementById('loading');
-        const resSection = document.getElementById('result-section');
-        
+        const resultCard = document.getElementById('result-card');
+
         loading.style.display = 'block';
-        resSection.style.display = 'none';
+        resultCard.style.display = 'none';
 
         try {
-            // 1. Gọi API tính toán
-            const res = await fetch(`${API_BASE}/solve?expr=${encodeURIComponent(formula)}&lower=${a}&upper=${b}`);
+            const res = await fetch(`${API_URL}/solve?expr=${encodeURIComponent(formula)}&lower=${a}&upper=${b}`);
             const data = await res.json();
 
             if (data.status === 'success') {
                 document.getElementById('math-output').innerHTML = `\\[ ${data.display} \\]`;
                 
                 if (data.volume_latex) {
-                    document.getElementById('volume-box').style.display = 'block';
-                    document.getElementById('volume-output').innerHTML = `\\[ V = \\pi \\int_{a}^{b} [f(x)]^2 dx = ${data.volume_latex} \\pi \\]`;
+                    document.getElementById('vol-container').style.display = 'block';
+                    document.getElementById('vol-output').innerHTML = `\\[ V = ${data.volume_latex} \\pi \\]`;
+                } else {
+                    document.getElementById('vol-container').style.display = 'none';
                 }
 
-                // Cập nhật công thức toán học đẹp mắt
                 await MathJax.typesetPromise();
-                resSection.style.display = 'block';
+                resultCard.style.display = 'block';
 
-                // 2. Nếu có cận, tiến hành vẽ 3D
                 if (a !== "" && b !== "") {
-                    await draw3D(formula, parseFloat(a), parseFloat(b));
+                    draw3D(formula, parseFloat(a), parseFloat(b));
                 }
             } else {
-                alert("Lỗi: " + data.message);
+                alert("Lỗi server: " + data.message);
             }
-        } catch (err) {
-            alert("Lỗi kết nối Backend. Hãy kiểm tra lại URL Render!");
+        } catch (e) {
+            alert("Lỗi: Không thể kết nối tới Backend Render. Có thể server đang khởi động lại (Cold Start), hãy thử lại sau 30 giây!");
         } finally {
             loading.style.display = 'none';
         }
     }
 
     async function draw3D(expr, a, b) {
-        const resp = await fetch(`${API_BASE}/plot-data?expr=${encodeURIComponent(expr)}&lower=${a}&upper=${b}`);
-        const data = await resp.json();
+        try {
+            const resp = await fetch(`${API_URL}/plot-data?expr=${encodeURIComponent(expr)}&lower=${a}&upper=${b}`);
+            const data = await resp.json();
 
-        // Thuật toán tạo mặt tròn xoay (Surface of Revolution)
-        let x_mesh = [], y_mesh = [], z_mesh = [];
-        
-        for (let i = 0; i < data.x.length; i++) {
-            let x = data.x[i];
-            let r = data.y[i];
-            let x_row = [], y_row = [], z_row = [];
-            
-            for (let t = 0; t <= 2 * Math.PI; t += 0.2) {
-                x_row.push(x);
-                y_row.push(r * Math.cos(t));
-                z_row.push(r * Math.sin(t));
+            let x_m = [], y_m = [], z_m = [];
+            for (let i = 0; i < data.x.length; i++) {
+                let x = data.x[i], r = Math.abs(data.y[i]);
+                let xr = [], yr = [], zr = [];
+                for (let t = 0; t <= 6.3; t += 0.3) {
+                    xr.push(x); yr.push(r * Math.cos(t)); zr.push(r * Math.sin(t));
+                }
+                x_m.push(xr); y_m.push(yr); z_m.push(zr);
             }
-            x_mesh.push(x_row);
-            y_mesh.push(y_row);
-            z_mesh.push(z_row);
-        }
 
-        const trace = {
-            type: 'surface',
-            x: x_mesh,
-            y: y_mesh,
-            z: z_mesh,
-            colorscale: 'Viridis',
-            showscale: false
-        };
+            const trace = {
+                type: 'surface', x: x_m, y: y_m, z: z_m,
+                colorscale: 'Jet', showscale: false,
+                opacity: 0.9,
+                contours: { z: { show: true, usecolormap: true, project: { z: true } } }
+            };
 
-        const layout = {
-            title: 'Mô phỏng 3D Vật thể tròn xoay quanh Ox',
-            scene: {
-                xaxis: {title: 'Trục Ox'},
-                yaxis: {title: 'y'},
-                zaxis: {title: 'z'}
-            },
-            margin: {l:0, r:0, b:0, t:40}
-        };
+            const layout = {
+                title: 'Vật thể tròn xoay quanh trục Ox',
+                scene: { 
+                    xaxis: {title: 'Ox'}, yaxis: {title: 'y'}, zaxis: {title: 'z'},
+                    aspectmode: 'data'
+                },
+                margin: { l: 0, r: 0, b: 0, t: 40 }
+            };
 
-        Plotly.newPlot('plot-3d', [trace], layout);
+            Plotly.newPlot('plot-3d', [trace], layout);
+        } catch(e) { console.error("Lỗi vẽ hình:", e); }
     }
 </script>
 </body>
