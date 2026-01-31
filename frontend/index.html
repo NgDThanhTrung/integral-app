@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Tập Tích Phân 12 - Mô Phỏng 3D</title>
+    
+    <script src="https://unpkg.com/mathlive"></script>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --primary: #2563eb; --secondary: #10b981; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .container { background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h1 { color: #1e293b; text-align: center; margin-bottom: 30px; font-size: 1.8rem; }
+        
+        .input-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #475569; }
+        
+        math-field { border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; font-size: 1.6rem; width: 100%; outline: none; transition: 0.3s; }
+        math-field:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+
+        .range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .range-inputs input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
+
+        button { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #1d4ed8; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+
+        .result-section { margin-top: 30px; display: none; border-top: 2px dashed #e2e8f0; padding-top: 20px; }
+        .res-box { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .res-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; }
+
+        #plot-3d { width: 100%; height: 500px; border-radius: 12px; overflow: hidden; }
+        .loading { display: none; text-align: center; color: var(--primary); font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Giải & Mô Phỏng Tích Phân 12</h1>
+
+    <div class="input-group">
+        <label>Nhập hàm số $f(x)$:</label>
+        <math-field id="formula">x^2</math-field>
+    </div>
+
+    <div class="range-inputs">
+        <div>
+            <label>Cận dưới (a):</label>
+            <input type="text" id="lower" placeholder="Ví dụ: 0">
+        </div>
+        <div>
+            <label>Cận trên (b):</label>
+            <input type="text" id="upper" placeholder="Ví dụ: 2">
+        </div>
+    </div>
+
+    <button onclick="runApp()">GIẢI TOÁN & VẼ 3D</button>
+    <div id="loading" class="loading">Đang tính toán và dựng hình 3D...</div>
+
+    <div id="result-section" class="result-section">
+        <div class="res-box">
+            <div class="res-title">Kết quả tích phân:</div>
+            <div id="math-output" style="font-size: 1.3rem;"></div>
+        </div>
+        
+        <div class="res-box" id="volume-box" style="display:none; border-left: 4px solid var(--secondary);">
+            <div class="res-title">Thể tích vật thể tròn xoay (Quanh Ox):</div>
+            <div id="volume-output" style="font-size: 1.3rem;"></div>
+        </div>
+
+        <div id="plot-3d"></div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "https://TEN-APP-CUA-BAN.onrender.com"; // THAY LINK RENDER CỦA BẠN VÀO ĐÂY
+
+    async function runApp() {
+        const formula = document.getElementById('formula').getValue('ascii-math');
+        const a = document.getElementById('lower').value;
+        const b = document.getElementById('upper').value;
+        
+        const loading = document.getElementById('loading');
+        const resSection = document.getElementById('result-section');
+        
+        loading.style.display = 'block';
+        resSection.style.display = 'none';
+
+        try {
+            // 1. Gọi API tính toán
+            const res = await fetch(`${API_BASE}/solve?expr=${encodeURIComponent(formula)}&lower=${a}&upper=${b}`);
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                document.getElementById('math-output').innerHTML = `\\[ ${data.display} \\]`;
+                
+                if (data.volume_latex) {
+                    document.getElementById('volume-box').style.display = 'block';
+                    document.getElementById('volume-output').innerHTML = `\\[ V = \\pi \\int_{a}^{b} [f(x)]^2 dx = ${data.volume_latex} \\pi \\]`;
+                }
+
+                // Cập nhật công thức toán học đẹp mắt
+                await MathJax.typesetPromise();
+                resSection.style.display = 'block';
+
+                // 2. Nếu có cận, tiến hành vẽ 3D
+                if (a !== "" && b !== "") {
+                    await draw3D(formula, parseFloat(a), parseFloat(b));
+                }
+            } else {
+                alert("Lỗi: " + data.message);
+            }
+        } catch (err) {
+            alert("Lỗi kết nối Backend. Hãy kiểm tra lại URL Render!");
+        } finally {
+            loading.style.display = 'none';
+        }
+    }
+
+    async function draw3D(expr, a, b) {
+        const resp = await fetch(`${API_BASE}/plot-data?expr=${encodeURIComponent(expr)}&lower=${a}&upper=${b}`);
+        const data = await resp.json();
+
+        // Thuật toán tạo mặt tròn xoay (Surface of Revolution)
+        let x_mesh = [], y_mesh = [], z_mesh = [];
+        
+        for (let i = 0; i < data.x.length; i++) {
+            let x = data.x[i];
+            let r = data.y[i];
+            let x_row = [], y_row = [], z_row = [];
+            
+            for (let t = 0; t <= 2 * Math.PI; t += 0.2) {
+                x_row.push(x);
+                y_row.push(r * Math.cos(t));
+                z_row.push(r * Math.sin(t));
+            }
+            x_mesh.push(x_row);
+            y_mesh.push(y_row);
+            z_mesh.push(z_row);
+        }
+
+        const trace = {
+            type: 'surface',
+            x: x_mesh,
+            y: y_mesh,
+            z: z_mesh,
+            colorscale: 'Viridis',
+            showscale: false
+        };
+
+        const layout = {
+            title: 'Mô phỏng 3D Vật thể tròn xoay quanh Ox',
+            scene: {
+                xaxis: {title: 'Trục Ox'},
+                yaxis: {title: 'y'},
+                zaxis: {title: 'z'}
+            },
+            margin: {l:0, r:0, b:0, t:40}
+        };
+
+        Plotly.newPlot('plot-3d', [trace], layout);
+    }
+</script>
+</body>
+</html>
