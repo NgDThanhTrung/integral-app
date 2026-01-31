@@ -1,4 +1,4 @@
 fastapi
 uvicorn
 sympy
-antlr4-python3-runtime==4.11  # Cần thiết để SymPy hiểu được các ký tự toán học
+numpy
